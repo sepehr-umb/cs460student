@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <title>Hello Cube</title>
+    <style>
+      html, body {
+        background-color: #000;
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+    </style>
+    <script type="text/javascript" src="https://get.goXTK.com/xtk_edge.js"></script>
+    <script type="text/javascript">
+      window.onload = function() {
+        var r = new X.renderer3D();
+        r.init();
+
+        var cube = new X.cube();
+        r.add(cube);
+
+        r.render();
+      };
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
