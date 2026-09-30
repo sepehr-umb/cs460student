@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HELLO TESSERACT // Pearlescent Outer Shell & Vantablack Core</title>
+
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- The X Toolkit (XTK) & dat.GUI -->
+  <script type="text/javascript" src="https://get.goXTK.com/xtk_edge.js"></script>
+  <script type="text/javascript" src="https://get.goXTK.com/xtk_xdat.gui.js"></script>
+
+  <style>
+    :root {
+      --sketch-bg: #f8f5ee;
+      --sketch-ink: #11141a;
+      --sketch-blue: #0084ff;
+      --sketch-dot: #cfcbbe;
+      --panel-bg: rgba(248, 245, 238, 0.90);
+      --panel-border: rgba(17, 20, 26, 0.18);
+      --text-main: #11141a;
+      --text-muted: #626773;
+    }
+
+    body.dark-mode {
+      --sketch-bg: #080910;
+      --sketch-ink: #f0f4ff;
+      --sketch-blue: #00c8ff;
+      --sketch-dot: #191c28;
+      --panel-bg: rgba(12, 14, 24, 0.90);
+      --panel-border: rgba(0, 200, 255, 0.25);
+      --text-main: #f0f4ff;
+      --text-muted: #8b92a5;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden !important;
+      background-color: var(--sketch-bg);
+      font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text-main);
+      transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    /* Dotted Paper Background matching sketch dot grid */
+    .dotted-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      background-image: radial-gradient(var(--sketch-dot) 1.5px, transparent 1.5px);
+      background-size: 26px 26px;
+      background-position: 0 0;
+      opacity: 0.85;
+    }
+
+    /* WebGL Canvas Viewport */
+    #webgl-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    #webgl-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    /* UI Overlay Layer */
+    #ui-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 22px 26px;
+      transition: opacity 0.3s ease;
+    }
+
+    #ui-overlay.hidden {
+      opacity: 0;
+      pointer-events: none !important;
+    }
+
+    .interactive {
+      pointer-events: auto;
+    }
+
+    /* Top Bar Header */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    .title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .demo-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      margin: 0;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge-hello {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(0, 132, 255, 0.15);
+      border: 1px solid var(--sketch-blue);
+      color: var(--sketch-blue);
+    }
+
+    .demo-sub {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* Quick Action Buttons */
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn-action {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      color: var(--text-main);
+      padding: 8px 14px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-radius: 6px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-action:hover {
+      border-color: var(--sketch-blue);
+      color: var(--sketch-blue);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(0, 132, 255, 0.2);
+    }
+
+    .btn-action.active {
+      background: var(--sketch-blue);
+      border-color: var(--sketch-blue);
+      color: #ffffff;
+      box-shadow: 0 0 16px rgba(0, 132, 255, 0.45);
+    }
+
+    /* Sketch Drawer Side Comparison */
+    #sketch-drawer {
+      position: absolute;
+      right: 26px;
+      top: 80px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      width: 250px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+      z-index: 20;
+    }
+
+    #sketch-drawer.collapsed {
+      transform: translateX(300px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .sketch-header {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--sketch-blue);
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 6px;
+    }
+
+    .sketch-img {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: block;
+    }
+
+    .sketch-caption {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    /* Bottom Status Bar */
+    .bottom-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      width: 100%;
+    }
+
+    .status-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      padding: 10px 18px;
+      border-radius: 10px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+      display: flex;
+      gap: 18px;
+    }
+
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .stat-label {
+      font-family: 'Orbitron', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .stat-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--sketch-blue);
+    }
+
+    /* Pearlescent Shimmer Indicator */
+    .pearl-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #ffcce6, #d4f0ff, #e0d4ff, #d8ffd8);
+      color: #222;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      box-shadow: 0 0 10px rgba(255, 200, 240, 0.6);
+    }
+
+    .vanta-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #020205;
+      color: #00e5ff;
+      border: 1px solid rgba(0, 229, 255, 0.4);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Instructions & Shortcut Bar */
+    .hints-bar {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      padding: 10px 18px;
+      border-radius: 10px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .kbd {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 10px;
+      color: var(--text-main);
+    }
+
+    body.dark-mode .kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Notification Flash Banner */
+    #flash-toast {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--panel-bg);
+      border: 1px solid var(--sketch-blue);
+      box-shadow: 0 6px 25px rgba(0, 132, 255, 0.35);
+      border-radius: 30px;
+      padding: 8px 24px;
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--text-main);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+    }
+
+    #flash-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* dat.GUI Styling */
+    .dg.ac {
+      z-index: 50 !important;
+      top: 18px !important;
+      right: 18px !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Dotted Grid Paper Layer -->
+  <div class="dotted-grid"></div>
+
+  <!-- WebGL Render Canvas -->
+  <div id="webgl-container"></div>
+
+  <!-- Notification Banner -->
+  <div id="flash-toast">
+    <span id="flash-text">PEARLESCENT SHELL // VANTABLACK CORE</span>
+  </div>
+
+  <!-- UI Overlay -->
+  <div id="ui-overlay">
+    
+    <!-- Top Header -->
+    <header class="top-bar">
+      <div class="title-group">
+        <h1 class="demo-title">
+          HELLO TESSERACT
+          <span class="badge-hello">XTK // CS460</span>
+        </h1>
+        <div class="demo-sub">Pearlescent Outer Shell & Vantablack Inner Core // From Hand-Drawn Sketch</div>
+      </div>
+
+      <div class="top-actions interactive">
+        <button id="btn-theme" class="btn-action" title="Toggle Sketchbook / Cyber Dark Theme [T]">
+          <span id="theme-icon">🌓</span>
+          <span id="theme-label">DARK THEME</span>
+        </button>
+
+        <button id="btn-pause" class="btn-action" title="Pause / Resume Rotation [Space]">
+          <span id="pause-icon">⏸</span>
+          <span id="pause-label">PAUSE</span>
+        </button>
+
+        <button id="btn-morph" class="btn-action" title="Toggle 4D Hyper-Folding Dimension [M]">
+          <span>🌀</span>
+          <span id="morph-label">4D MORPH: OFF</span>
+        </button>
+
+        <button id="btn-palette" class="btn-action" title="Cycle Pearlescent Luster Palette [P]">
+          <span>✨</span>
+          <span id="palette-label">OPAL NACRE</span>
+        </button>
+
+        <button id="btn-sketch" class="btn-action active" title="Toggle Sketch Reference [S]">
+          <span>🖼</span>
+          <span>ORIGINAL SKETCH</span>
+        </button>
+
+        <button id="btn-reset" class="btn-action" title="Reset View Angle [R]">
+          <span>🔄</span>
+          <span>RESET CAM</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Sketch Comparison Drawer (Shows IMG_0111.jpg) -->
+    <div id="sketch-drawer" class="interactive">
+      <div class="sketch-header">
+        <span>ORIGINAL SKETCH</span>
+        <button id="btn-close-sketch" style="background:none; border:none; cursor:pointer; font-size:14px; color:var(--text-muted);" title="Close">✕</button>
+      </div>
+      <img src="IMG_0111.jpg" alt="User Sketch of Tesseract" class="sketch-img" onerror="this.style.display='none'; this.nextElementSibling.textContent='(Sketch image IMG_0111.jpg copied to workspace)';">
+      <div class="sketch-caption">
+        <strong>Hand-Drawn Tesseract</strong><br>
+        • Outer Pearlescent Cube (8 nodes)<br>
+        • 8 Blue Connecting Struts<br>
+        • Inner Vantablack Core
+      </div>
+    </div>
+
+    <!-- Bottom Status Bar -->
+    <footer class="bottom-bar">
+      <!-- Live Metrics Card -->
+      <div class="status-card interactive">
+        <div class="stat-box">
+          <span class="stat-label">RENDER FPS</span>
+          <span class="stat-val" id="fps-val">60</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">OUTER FACES</span>
+          <span class="pearl-badge" id="luster-val">PEARLESCENT SHELL</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">INNER CORE</span>
+          <span class="vanta-badge">VANTABLACK VOID</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">VIEW ANGLE</span>
+          <span class="stat-val" id="angle-val">VIEW: 34°</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">TRANSPARENCY</span>
+          <span class="stat-val" id="opacity-val">76% SHEER</span>
+        </div>
+      </div>
+
+      <!-- Quick Shortcuts Guide -->
+      <div class="hints-bar interactive">
+        <span><span class="kbd">MOUSE DRAG</span> Orbit Cube</span>
+        <span><span class="kbd">SPACE</span> Play/Pause</span>
+        <span><span class="kbd">P</span> Shimmer Luster</span>
+        <span><span class="kbd">M</span> 4D Morph</span>
+        <span><span class="kbd">T</span> Theme</span>
+        <span><span class="kbd">S</span> Sketch</span>
+        <span><span class="kbd">R</span> Reset</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Main Application Logic -->
+  <script type="text/javascript">
+    (function () {
+      'use strict';
+
+      // ==========================================
+      // CONFIGURATION & STATE
+      // ==========================================
+      var CONFIG = {
+        // Tesseract Dimensions
+        outerSize: 52,        // Half edge length of outer cube
+        innerSizeRatio: 0.38, // Ratio of inner cube to outer cube
+        
+        // Animation
+        animating: true,
+        rotSpeedX: 0.6,
+        rotSpeedY: 0.9,
+        rotSpeedZ: 0.3,
+        
+        // 4D Hypercube Morphing
+        morph4D: false,
+        morphSpeed: 1.0,
+        
+        // Outer Pearlescence (Slightly less transparent as requested: ~0.76 base)
+        palette: 'opal', // 'opal', 'nacre', 'sunset', 'prism'
+        shimmerIntensity: 1.15,
+        baseOuterFaceOpacity: 0.76,
+        fresnelEdgeGlow: 0.22,
+
+        // Inner Vantablack Core
+        vantaDarkness: 0.012, // Ultra-deep light absorbing black
+        innerCubeOpacity: 0.98,
+
+        // Visual Appearance
+        darkMode: false,
+        showSketch: true,
+        showHUD: true
+      };
+
+      // PEARLESCENT COLOR TRANSFER PALETTES
+      var PEARL_PALETTES = {
+        opal: [
+          [0.98, 0.78, 0.88], // Rose Quartz
+          [0.99, 0.92, 0.80], // Warm Champagne Nacre
+          [0.78, 0.98, 0.88], // Opal Mint
+          [0.70, 0.95, 0.98], // Sea-Pearl Aquamarine
+          [0.88, 0.80, 0.99]  // Ethereal Lavender
+        ],
+        nacre: [
+          [0.96, 0.95, 0.98], // Pure White Pearl
+          [0.72, 0.94, 0.98], // Glacial Aqua
+          [0.90, 0.82, 0.98], // Iridescent Violet
+          [0.85, 0.98, 0.92], // Shimmering Jade
+          [0.98, 0.88, 0.92]  // Pearl Blush
+        ],
+        sunset: [
+          [0.99, 0.65, 0.55], // Coral Pearl
+          [0.98, 0.88, 0.65], // Golden Amber
+          [0.96, 0.55, 0.80], // Sunset Orchid
+          [0.65, 0.85, 0.98], // Twilight Sky
+          [0.99, 0.78, 0.60]  // Peach Silk
+        ],
+        prism: [
+          [1.00, 0.35, 0.65], // Electric Pink
+          [1.00, 0.85, 0.20], // Radiant Solar
+          [0.25, 0.95, 0.75], // Cyber Mint
+          [0.20, 0.80, 1.00], // Electric Azure
+          [0.75, 0.40, 1.00]  // Neon Purple
+        ]
+      };
+
+      var PALETTE_KEYS = ['opal', 'nacre', 'sunset', 'prism'];
+      var PALETTE_LABELS = {
+        opal: 'OPAL NACRE',
+        nacre: 'SILVER PEARL',
+        sunset: 'SUNSET SILK',
+        prism: 'PRISM SHIMMER'
+      };
+
+      // SYSTEM VARIABLES
+      var r = null;                     // XTK 3D Renderer
+      var tesseractObjects = [];        // All displayable components
+      var outerPearlescentFaces = [];   // 6 outer cube pearlescent faces
+      var innerVantaCube = null;        // Inner solid Vantablack cube
+      var blueStruts = [];              // 8 connecting blue cylinders
+      var outerCylinders = [];          // 12 outer frame edges
+      var outerSpheres = [];            // 8 outer corner nodes
+      var innerCylinders = [];          // 12 inner frame edges
+      var innerSpheres = [];            // 8 inner corner nodes
+
+      // Geometric Definitions
+      var L = CONFIG.outerSize;
+      var l = L * CONFIG.innerSizeRatio;
+
+      var V_OUT = [
+        [-L, -L, -L], [ L, -L, -L], [ L,  L, -L], [-L,  L, -L],
+        [-L, -L,  L], [ L, -L,  L], [ L,  L,  L], [-L,  L,  L]
+      ];
+
+      var EDGES = [
+        [0, 1], [1, 2], [2, 3], [3, 0],
+        [4, 5], [5, 6], [6, 7], [7, 4],
+        [0, 4], [1, 5], [2, 6], [3, 7]
+      ];
+
+      var clockTime = 0.0;
+      var lastTime = performance.now();
+      var fpsCount = 0;
+      var fpsTimer = performance.now();
+
+      // ==========================================
+      // PEARLESCENT SHADING MATH
+      // ==========================================
+      function getPearlescentColor(phase, paletteKey) {
+        var colors = PEARL_PALETTES[paletteKey] || PEARL_PALETTES.opal;
+        var len = colors.length;
+        var p = (phase * len) % len;
+        if (p < 0) p += len;
+        var i1 = Math.floor(p);
+        var i2 = (i1 + 1) % len;
+        var f = p - i1;
+
+        var c1 = colors[i1];
+        var c2 = colors[i2];
+        return [
+          c1[0] * (1 - f) + c2[0] * f,
+          c1[1] * (1 - f) + c2[1] * f,
+          c1[2] * (1 - f) + c2[2] * f
+        ];
+      }
+
+      function updateOuterPearlescentShading(time) {
+        if (!r || !r.camera) return;
+
+        var camPos = r.camera.position;
+        var camLen = Math.sqrt(camPos[0]*camPos[0] + camPos[1]*camPos[1] + camPos[2]*camPos[2]) || 1;
+        var V = [camPos[0] / camLen, camPos[1] / camLen, camPos[2] / camLen];
+
+        // Key light direction
+        var Ldir = [0.577, 0.707, 0.408];
+
+        // Update each of the 6 OUTER cube pearlescent sides
+        outerPearlescentFaces.forEach(function (faceItem) {
+          var cubeObj = faceItem.obj;
+          var baseN = faceItem.baseNormal;
+          var m = cubeObj.transform.matrix;
+
+          // Compute transformed world normal
+          var nx = m[0] * baseN[0] + m[4] * baseN[1] + m[8] * baseN[2];
+          var ny = m[1] * baseN[0] + m[5] * baseN[1] + m[9] * baseN[2];
+          var nz = m[2] * baseN[0] + m[6] * baseN[1] + m[10] * baseN[2];
+          var nLen = Math.sqrt(nx*nx + ny*ny + nz*nz) || 1;
+          nx /= nLen; ny /= nLen; nz /= nLen;
+
+          // View angle cosine (Fresnel term)
+          var NdotV = nx * V[0] + ny * V[1] + nz * V[2];
+          var absNdotV = Math.abs(NdotV);
+          var grazing = 1.0 - absNdotV; // 1 at glancing angle, 0 perpendicular
+
+          // Specular luster half-vector
+          var Hx = V[0] + Ldir[0], Hy = V[1] + Ldir[1], Hz = V[2] + Ldir[2];
+          var hLen = Math.sqrt(Hx*Hx + Hy*Hy + Hz*Hz) || 1;
+          Hx /= hLen; Hy /= hLen; Hz /= hLen;
+          var NdotH = Math.max(0, nx * Hx + ny * Hy + nz * Hz);
+          var spec = Math.pow(NdotH, 16);
+
+          // Real-time iridescent phase shift based on viewing angle, lighting & time
+          var phase = (absNdotV * 1.5 + grazing * 1.25 + (nx * Ldir[0] + ny * Ldir[1] + nz * Ldir[2]) * 0.35 + time * 0.08) % 1.0;
+          if (phase < 0) phase += 1.0;
+
+          var pearlColor = getPearlescentColor(phase, CONFIG.palette);
+
+          // Blend specular sheen
+          var specBoost = spec * 0.45 * CONFIG.shimmerIntensity;
+          cubeObj.color = [
+            Math.min(1.0, pearlColor[0] + specBoost),
+            Math.min(1.0, pearlColor[1] + specBoost),
+            Math.min(1.0, pearlColor[2] + specBoost)
+          ];
+
+          // Dynamic Fresnel transparency: slightly less transparent (~0.76 base), richer sheen at grazing edges!
+          cubeObj.opacity = Math.min(0.94, CONFIG.baseOuterFaceOpacity * (0.85 + CONFIG.fresnelEdgeGlow * grazing));
+        });
+
+        // Ensure inner cube stays pitch Vantablack
+        if (innerVantaCube) {
+          var k = CONFIG.vantaDarkness;
+          innerVantaCube.color = [k, k, k * 1.2];
+          innerVantaCube.opacity = CONFIG.innerCubeOpacity;
+        }
+
+        // Update angle metric in HUD
+        var angleVal = document.getElementById('angle-val');
+        if (angleVal) {
+          var pitchDeg = Math.round(Math.asin(V[1]) * (180 / Math.PI));
+          angleVal.textContent = 'VIEW: ' + pitchDeg + '°';
+        }
+      }
+
+      // ==========================================
+      // 4D HYPERCUBE MORPHING ANIMATION
+      // ==========================================
+      function update4DMorph(time) {
+        if (!CONFIG.morph4D) return;
+
+        // In 4D folding, the inner cube expands and the outer cube shrinks
+        var t4 = time * CONFIG.morphSpeed * 0.8;
+        var s4 = Math.sin(t4);
+        var currentK = 0.38 + s4 * 0.20; // Morph inner scale between 0.18 and 0.58
+
+        if (innerVantaCube) {
+          var coreScale = (currentK / 0.38);
+          innerVantaCube.lengthX = innerVantaCube.lengthY = innerVantaCube.lengthZ = 2 * l * coreScale * 0.98;
+        }
+      }
+
+      // ==========================================
+      // UI & HUD INTERACTIONS
+      // ==========================================
+      function flash(msg) {
+        var toast = document.getElementById('flash-toast');
+        var text = document.getElementById('flash-text');
+        if (!toast || !text) return;
+        text.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(function () {
+          toast.classList.remove('show');
+        }, 1800);
+      }
+
+      function toggleTheme() {
+        CONFIG.darkMode = !CONFIG.darkMode;
+        document.body.classList.toggle('dark-mode', CONFIG.darkMode);
+
+        var icon = document.getElementById('theme-icon');
+        var label = document.getElementById('theme-label');
+        if (icon && label) {
+          icon.textContent = CONFIG.darkMode ? '☀️' : '🌓';
+          label.textContent = CONFIG.darkMode ? 'SKETCH THEME' : 'DARK THEME';
+        }
+
+        // Update XTK canvas background clear color
+        if (r) {
+          r.bgColor = CONFIG.darkMode ? [0.035, 0.04, 0.065] : [0.97, 0.96, 0.93];
+        }
+
+        // Keep outer frame edges matching the theme
+        var edgeCol = CONFIG.darkMode ? [0.90, 0.93, 0.98] : [0.08, 0.09, 0.12];
+        outerCylinders.forEach(function (c) { c.color = edgeCol; });
+        outerSpheres.forEach(function (s) { s.color = edgeCol; });
+
+        // Inner frame edges on the Vantablack cube stay deep black or dark graphite
+        var inCol = [CONFIG.vantaDarkness, CONFIG.vantaDarkness, CONFIG.vantaDarkness];
+        innerCylinders.forEach(function (c) { c.color = inCol; });
+        innerSpheres.forEach(function (s) { s.color = inCol; });
+
+        flash(CONFIG.darkMode ? 'DARK COSMIC THEME' : 'SKETCHBOOK PAPER THEME');
+      }
+
+      function togglePause() {
+        CONFIG.animating = !CONFIG.animating;
+        var icon = document.getElementById('pause-icon');
+        var label = document.getElementById('pause-label');
+        if (icon && label) {
+          icon.textContent = CONFIG.animating ? '⏸' : '▶';
+          label.textContent = CONFIG.animating ? 'PAUSE' : 'RESUME';
+        }
+        flash(CONFIG.animating ? 'ROTATION RESUMED' : 'ROTATION PAUSED');
+      }
+
+      function toggleMorph() {
+        CONFIG.morph4D = !CONFIG.morph4D;
+        var btn = document.getElementById('btn-morph');
+        var label = document.getElementById('morph-label');
+        if (btn && label) {
+          btn.classList.toggle('active', CONFIG.morph4D);
+          label.textContent = CONFIG.morph4D ? '4D MORPH: ON' : '4D MORPH: OFF';
+        }
+        flash(CONFIG.morph4D ? '4D HYPER-FOLDING ACTIVE' : '3D RIGID ORBIT ACTIVE');
+      }
+
+      function cyclePalette() {
+        var idx = PALETTE_KEYS.indexOf(CONFIG.palette);
+        var next = PALETTE_KEYS[(idx + 1) % PALETTE_KEYS.length];
+        CONFIG.palette = next;
+
+        var label = document.getElementById('palette-label');
+        var lusterBadge = document.getElementById('luster-val');
+        if (label) label.textContent = PALETTE_LABELS[next];
+        if (lusterBadge) lusterBadge.textContent = PALETTE_LABELS[next];
+
+        flash('OUTER LUSTER: ' + PALETTE_LABELS[next]);
+      }
+
+      function toggleSketchDrawer() {
+        CONFIG.showSketch = !CONFIG.showSketch;
+        var drawer = document.getElementById('sketch-drawer');
+        var btn = document.getElementById('btn-sketch');
+        if (drawer) drawer.classList.toggle('collapsed', !CONFIG.showSketch);
+        if (btn) btn.classList.toggle('active', CONFIG.showSketch);
+      }
+
+      function resetCamera() {
+        if (!r || !r.camera) return;
+        // Default oblique angle matching the sketch view!
+        r.camera.position = [135, 125, 230];
+        r.camera.focus = [0, 0, 0];
+        r.camera.up = [0, 1, 0];
+        flash('CAMERA RESET TO SKETCH PERSPECTIVE');
+      }
+
+      // ==========================================
+      // DAT.GUI INTEGRATION
+      // ==========================================
+      function setupDatGUI() {
+        if (typeof dat === 'undefined') return;
+        var gui = new dat.GUI({ width: 285 });
+
+        var fAnim = gui.addFolder('Hello Cube Rotation');
+        fAnim.add(CONFIG, 'animating').name('Auto Spin').listen().onChange(function(v){
+          var icon = document.getElementById('pause-icon');
+          var label = document.getElementById('pause-label');
+          if (icon && label) {
+            icon.textContent = v ? '⏸' : '▶';
+            label.textContent = v ? 'PAUSE' : 'RESUME';
+          }
+        });
+        fAnim.add(CONFIG, 'rotSpeedX', -3.0, 3.0).name('Speed X');
+        fAnim.add(CONFIG, 'rotSpeedY', -3.0, 3.0).name('Speed Y');
+        fAnim.add(CONFIG, 'rotSpeedZ', -3.0, 3.0).name('Speed Z');
+        fAnim.add(CONFIG, 'morph4D').name('4D Hyper-Fold').listen().onChange(toggleMorph);
+        fAnim.open();
+
+        var fOuter = gui.addFolder('Outer Pearlescent Shell');
+        fOuter.add(CONFIG, 'palette', PALETTE_KEYS).name('Shine Palette').onChange(function(k){
+          var label = document.getElementById('palette-label');
+          if (label) label.textContent = PALETTE_LABELS[k];
+        }).listen();
+        fOuter.add(CONFIG, 'baseOuterFaceOpacity', 0.2, 0.98).name('Shell Opacity').onChange(function(v){
+          var opVal = document.getElementById('opacity-val');
+          if (opVal) opVal.textContent = Math.round(v * 100) + '% SHEER';
+        });
+        fOuter.add(CONFIG, 'shimmerIntensity', 0.2, 2.5).name('Luster Sheen');
+        fOuter.add(CONFIG, 'fresnelEdgeGlow', 0.0, 1.0).name('Edge Reflection');
+        fOuter.open();
+
+        var fInner = gui.addFolder('Inner Vantablack Core');
+        fInner.add(CONFIG, 'vantaDarkness', 0.0, 0.15).name('Void Darkness');
+        fInner.add(CONFIG, 'innerCubeOpacity', 0.5, 1.0).name('Core Solidness');
+        fInner.open();
+
+        var fView = gui.addFolder('View & Sketch');
+        fView.add(CONFIG, 'darkMode').name('Dark Mode').onChange(toggleTheme).listen();
+        fView.add(CONFIG, 'showSketch').name('Sketch Preview').onChange(toggleSketchDrawer).listen();
+        fView.add({ reset: resetCamera }, 'reset').name('Reset Camera');
+      }
+
+      // ==========================================
+      // INITIALIZATION & GEOMETRY ASSEMBLY
+      // ==========================================
+      window.onload = function () {
+        console.log('🧊 Initializing Pearlescent Outer Shell & Vantablack Inner Core...');
+
+        if (typeof X === 'undefined' || !X.renderer3D) {
+          alert('XTK library failed to load from CDN. Please check internet connection.');
+          return;
+        }
+
+        // 1. Initialize XTK 3D Renderer
+        r = new X.renderer3D();
+        r.container = 'webgl-container';
+        // Warm sketchbook paper clear color matching the background of IMG_0111.jpg
+        r.bgColor = [0.97, 0.96, 0.93];
+        r.init();
+
+        var inkColor = [0.08, 0.09, 0.12]; // Charcoal ink matching sketch lines
+        var blueColor = [0.0, 0.52, 1.0];   // Vivid cyan-blue matching sketch marker
+        var vantaColor = [CONFIG.vantaDarkness, CONFIG.vantaDarkness, CONFIG.vantaDarkness * 1.2]; // Vantablack
+
+        // 2. Build Outer Cube Frame (12 Cylinders + 8 Spheres)
+        for (var e = 0; e < EDGES.length; e++) {
+          var cyl = new X.cylinder();
+          cyl.start = V_OUT[EDGES[e][0]];
+          cyl.end   = V_OUT[EDGES[e][1]];
+          cyl.radius = 1.35;
+          cyl.color = inkColor;
+          r.add(cyl);
+          outerCylinders.push(cyl);
+          tesseractObjects.push(cyl);
+        }
+
+        // 8 Outer Corner Spheres (The black dots from IMG_0111.jpg!)
+        for (var v = 0; v < 8; v++) {
+          var sph = new X.sphere();
+          sph.center = V_OUT[v];
+          sph.radius = 3.3;
+          sph.color = inkColor;
+          sph.caption = 'Outer Corner ' + (v + 1);
+          r.add(sph);
+          outerSpheres.push(sph);
+          tesseractObjects.push(sph);
+        }
+
+        // 3. Build Outer Cube Pearlescent Sides (6 Faces with view-angle dependent iridescence!)
+        var S_out = 2 * L;
+        var eps_out = 0.5;
+        var outerFaceConfigs = [
+          { center: [ L, 0, 0], len: [eps_out, S_out, S_out], norm: [ 1, 0, 0], name: 'Outer Right Face (+X)' },
+          { center: [-L, 0, 0], len: [eps_out, S_out, S_out], norm: [-1, 0, 0], name: 'Outer Left Face (-X)' },
+          { center: [ 0, L, 0], len: [S_out, eps_out, S_out], norm: [ 0, 1, 0], name: 'Outer Top Face (+Y)' },
+          { center: [ 0,-L, 0], len: [S_out, eps_out, S_out], norm: [ 0,-1, 0], name: 'Outer Bottom Face (-Y)' },
+          { center: [ 0, 0, L], len: [S_out, S_out, eps_out], norm: [ 0, 0, 1], name: 'Outer Front Face (+Z)' },
+          { center: [ 0, 0,-L], len: [S_out, S_out, eps_out], norm: [ 0, 0,-1], name: 'Outer Back Face (-Z)' }
+        ];
+
+        outerFaceConfigs.forEach(function (fc, i) {
+          var face = new X.cube();
+          face.center = fc.center;
+          face.lengthX = fc.len[0];
+          face.lengthY = fc.len[1];
+          face.lengthZ = fc.len[2];
+          face.color = [0.95, 0.88, 0.96]; // Base pearl
+          face.opacity = CONFIG.baseOuterFaceOpacity;
+          face.caption = '★ Pearlescent ' + fc.name;
+          r.add(face);
+          outerPearlescentFaces.push({
+            obj: face,
+            baseNormal: fc.norm,
+            index: i
+          });
+          tesseractObjects.push(face);
+        });
+
+        // 4. Build Inner Cube Coordinates & Frame
+        var V_IN = [];
+        for (var vi = 0; vi < 8; vi++) {
+          V_IN.push([V_OUT[vi][0] * CONFIG.innerSizeRatio, V_OUT[vi][1] * CONFIG.innerSizeRatio, V_OUT[vi][2] * CONFIG.innerSizeRatio]);
+        }
+
+        for (var ie = 0; ie < EDGES.length; ie++) {
+          var inCyl = new X.cylinder();
+          inCyl.start = V_IN[EDGES[ie][0]];
+          inCyl.end   = V_IN[EDGES[ie][1]];
+          inCyl.radius = 1.1;
+          inCyl.color = vantaColor;
+          r.add(inCyl);
+          innerCylinders.push(inCyl);
+          tesseractObjects.push(inCyl);
+        }
+
+        for (var iv = 0; iv < 8; iv++) {
+          var inSph = new X.sphere();
+          inSph.center = V_IN[iv];
+          inSph.radius = 2.1;
+          inSph.color = vantaColor;
+          r.add(inSph);
+          innerSpheres.push(inSph);
+          tesseractObjects.push(inSph);
+        }
+
+        // 5. Build 8 Connecting Blue Struts (Connecting Outer Pearlescent Corners to Inner Vantablack Corners!)
+        for (var s = 0; s < 8; s++) {
+          var strut = new X.cylinder();
+          strut.start = V_OUT[s];
+          strut.end   = V_IN[s];
+          strut.radius = 1.65;
+          strut.color = blueColor;
+          strut.caption = '4D Strut ' + (s + 1);
+          r.add(strut);
+          blueStruts.push(strut);
+          tesseractObjects.push(strut);
+        }
+
+        // 6. Build the Solid Inner Vantablack Cube!
+        var S_in = 2 * l;
+        innerVantaCube = new X.cube();
+        innerVantaCube.center = [0, 0, 0];
+        innerVantaCube.lengthX = innerVantaCube.lengthY = innerVantaCube.lengthZ = S_in * 0.98;
+        innerVantaCube.color = vantaColor;
+        innerVantaCube.opacity = CONFIG.innerCubeOpacity;
+        innerVantaCube.caption = '★ Vantablack Inner Core ★';
+        r.add(innerVantaCube);
+        tesseractObjects.push(innerVantaCube);
+
+        // 7. Initial Camera Position (Oblique angle matching the hand-drawn sketch!)
+        r.camera.position = [135, 125, 230];
+        r.camera.focus = [0, 0, 0];
+        r.camera.up = [0, 1, 0];
+
+        // 8. Event Listeners & GUI
+        setupDatGUI();
+
+        document.getElementById('btn-theme').addEventListener('click', toggleTheme);
+        document.getElementById('btn-pause').addEventListener('click', togglePause);
+        document.getElementById('btn-morph').addEventListener('click', toggleMorph);
+        document.getElementById('btn-palette').addEventListener('click', cyclePalette);
+        document.getElementById('btn-sketch').addEventListener('click', toggleSketchDrawer);
+        document.getElementById('btn-close-sketch').addEventListener('click', toggleSketchDrawer);
+        document.getElementById('btn-reset').addEventListener('click', resetCamera);
+
+        // Keyboard Shortcuts
+        window.addEventListener('keydown', function (e) {
+          if (e.target.tagName === 'INPUT') return;
+          switch (e.key.toLowerCase()) {
+            case ' ':
+              e.preventDefault();
+              togglePause();
+              break;
+            case 't': toggleTheme(); break;
+            case 'm': toggleMorph(); break;
+            case 'p': cyclePalette(); break;
+            case 's': toggleSketchDrawer(); break;
+            case 'r': resetCamera(); break;
+            case 'h':
+              CONFIG.showHUD = !CONFIG.showHUD;
+              document.getElementById('ui-overlay').classList.toggle('hidden', !CONFIG.showHUD);
+              break;
+          }
+        });
+
+        // 9. ANIMATED HELLO CUBE RENDER LOOP
+        r.onRender = function () {
+          var now = performance.now();
+          var dt = (now - lastTime) / 1000;
+          lastTime = now;
+          if (dt > 0.1) dt = 0.1;
+
+          // FPS calculation
+          fpsCount++;
+          if (now - fpsTimer >= 500) {
+            var currentFPS = Math.round((fpsCount * 1000) / (now - fpsTimer));
+            fpsCount = 0;
+            fpsTimer = now;
+            var fpsElem = document.getElementById('fps-val');
+            if (fpsElem) fpsElem.textContent = currentFPS.toString();
+          }
+
+          if (CONFIG.animating) {
+            clockTime += dt;
+
+            // Apply unified 3D rotation to all components of the tesseract in lockstep
+            var stepX = CONFIG.rotSpeedX;
+            var stepY = CONFIG.rotSpeedY;
+            var stepZ = CONFIG.rotSpeedZ;
+
+            for (var i = 0; i < tesseractObjects.length; i++) {
+              var obj = tesseractObjects[i];
+              obj.transform.rotateX(stepX);
+              obj.transform.rotateY(stepY);
+              obj.transform.rotateZ(stepZ);
+            }
+          }
+
+          // Real-time Pearlescent Angle Shading computation on outer cube sides
+          updateOuterPearlescentShading(clockTime);
+
+          // 4D Folding Dimension animation
+          update4DMorph(clockTime);
+        };
+
+        // Render the scene!
+        r.render();
+        flash('PEARLESCENT SHELL & VANTABLACK CORE INITIALIZED');
+      };
+
+    })();
+  </script>
+</body>
+</html>
